@@ -157,7 +157,7 @@ class Project {
 				foreach (d; deps) {
 					auto dependency = getDependency(d.name, true);
 					assert(dependency || d.spec.optional,
-						format("Non-optional dependency %s of %s not found in dependency tree!?.", d.name, p.name));
+						format("Non-optional dependency %s of %s not found in dependency tree.", d.name, p.name));
 					if(dependency) perform_rec(dependency);
 					if( ret ) return;
 				}
@@ -375,16 +375,21 @@ class Project {
 				if (!p && !vspec.path.empty) {
 					NativePath path = vspec.path;
 					if (!path.absolute) path = pack.path ~ path;
-					logDiagnostic("%sAdding local %s in %s", indent, dep.name, path);
-					p = m_packageManager.getOrLoadPackage(path, NativePath.init, true);
-					if (p.parentPackage !is null) {
-						logWarn("%sSub package %s must be referenced using the path to it's parent package.", indent, dep.name);
-						p = p.parentPackage;
+					NativePath recipe_path = Package.findPackageFile(path);
+					if (recipe_path.empty) {
+						logDiagnostic("%sIgnoring path %s due to missing dub file", indent, path);
+					} else {
+						logDiagnostic("%sAdding local %s with %s", indent, dep.name, recipe_path);
+						p = m_packageManager.getOrLoadPackage(path, recipe_path, true);
+						if (p.parentPackage !is null) {
+							logWarn("%sSub package %s must be referenced using the path to it's parent package.", indent, dep.name);
+							p = p.parentPackage;
+						}
+						if (subname.length) p = m_packageManager.getSubPackage(p, subname, false);
+						enforce(p.name == dep.name,
+							format("Path based dependency %s is referenced with a wrong name: %s vs. %s",
+								path.toNativeString(), dep.name, p.name));
 					}
-					if (subname.length) p = m_packageManager.getSubPackage(p, subname, false);
-					enforce(p.name == dep.name,
-						format("Path based dependency %s is referenced with a wrong name: %s vs. %s",
-							path.toNativeString(), dep.name, p.name));
 				}
 
 				if (!p) {

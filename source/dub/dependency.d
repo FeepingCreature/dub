@@ -264,6 +264,9 @@ struct Dependency {
 		else {
 			Dependency ret = this;
 			ret.path = path ~ ret.path;
+			if (Package.findPackageFile(ret.path).empty) {
+				ret.path = NativePath.init;
+			}
 			return ret;
 		}
 	}

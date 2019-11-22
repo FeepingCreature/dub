@@ -1,0 +1,5 @@
+name "hello"
+sourcePaths "."
+targetType "executable"
+dependency "foo" version="*" path="foo"
+dependency "bar" version="*" path="bar"

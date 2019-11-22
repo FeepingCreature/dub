@@ -1,0 +1,4 @@
+name "foo"
+sourcePaths "."
+targetType "library"
+dependency "bar" version="*" path="bar"
